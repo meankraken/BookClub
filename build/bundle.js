@@ -71,7 +71,14 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
-	(0, _jquery2.default)(document).ready(function () {});
+	(0, _jquery2.default)(document).ready(function () {
+		(0, _jquery2.default)(document).on('mouseenter', '.tradeBtn', function () {
+			(0, _jquery2.default)(this).css('background-color', 'rgba(22,179,22,1)');
+		});
+		(0, _jquery2.default)(document).on('mouseleave', '.tradeBtn', function () {
+			(0, _jquery2.default)(this).css('background-color', '');
+		});
+	});
 	
 	var App = function (_React$Component) {
 		_inherits(App, _React$Component);
@@ -81,8 +88,11 @@
 	
 			var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 	
-			_this.state = { books: [] };
+			_this.state = { books: [], targetBook: { title: 'noBookSelected' } };
 			_this.addBook = _this.addBook.bind(_this);
+			_this.tradeFor = _this.tradeFor.bind(_this);
+			_this.confirmTrade = _this.confirmTrade.bind(_this);
+			_this.cancelTrade = _this.cancelTrade.bind(_this);
 			return _this;
 		}
 	
@@ -98,6 +108,7 @@
 		}, {
 			key: 'addBook',
 			value: function addBook(event, book) {
+				//add a book via cmd
 				event.preventDefault();
 				(0, _jquery2.default)('#bookForm')[0].reset();
 				_jquery2.default.ajax({
@@ -105,7 +116,6 @@
 					dataType: 'json',
 					method: 'GET',
 					success: function (data) {
-						console.log(data);
 						if (data.title == 'maxReached') {
 							alert('Limit of 10 books has been reached');
 						} else if (data.title == 'alreadyAdded') {
@@ -123,14 +133,71 @@
 				});
 			}
 		}, {
+			key: 'tradeFor',
+			value: function tradeFor(book) {
+				//show trade popup
+				var hasBook = false;
+				this.state.books.forEach(function (book) {
+					if (book.owner == user) {
+						hasBook = true;
+					}
+					return;
+				});
+				if (hasBook) {
+					this.setState({ targetBook: book });
+				} else {
+					alert("You do not have any books to trade. Add some books to your collection using the command center toolbar.");
+				}
+			}
+		}, {
+			key: 'confirmTrade',
+			value: function confirmTrade() {
+				//execute the trade request 
+				_jquery2.default.ajax({
+					url: '/main/trade?offered=' + (0, _jquery2.default)('#bookOffered').val(),
+					method: 'POST',
+					data: this.state.targetBook,
+					success: function (data) {
+						var result = JSON.parse(data).title;
+						if (result == 'duplicateRequest') {
+							alert('This is a duplicate request. Please select another book and retry.');
+						} else if (result == 'success') {
+							window.location = '/main';
+							this.setState({ targetBook: { title: 'noBookSelected' } });
+						}
+					}.bind(this),
+					failure: function failure(err) {
+						console.log(err);
+					}
+	
+				});
+			}
+		}, {
+			key: 'cancelTrade',
+			value: function cancelTrade() {
+				this.setState({ targetBook: { title: 'noBookSelected' } });
+			}
+		}, {
 			key: 'render',
 			value: function render() {
-				return _react2.default.createElement(
-					'div',
-					null,
-					_react2.default.createElement(SideBar, { addBook: this.addBook }),
-					_react2.default.createElement(MainView, { books: this.state.books })
-				);
+				if (this.state.targetBook.title != 'noBookSelected') {
+					(0, _jquery2.default)('#mask').css('display', 'block');
+					return _react2.default.createElement(
+						'div',
+						null,
+						_react2.default.createElement(SideBar, { addBook: this.addBook }),
+						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor }),
+						_react2.default.createElement(TradeMenu, { books: this.state.books, targetBook: this.state.targetBook, confirmTrade: this.confirmTrade, cancelTrade: this.cancelTrade })
+					);
+				} else {
+					(0, _jquery2.default)('#mask').css('display', 'none');
+					return _react2.default.createElement(
+						'div',
+						null,
+						_react2.default.createElement(SideBar, { addBook: this.addBook }),
+						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor })
+					);
+				}
 			}
 		}]);
 	
@@ -140,6 +207,7 @@
 	var SideBar = function (_React$Component2) {
 		_inherits(SideBar, _React$Component2);
 	
+		//user toolbar
 		function SideBar(props) {
 			_classCallCheck(this, SideBar);
 	
@@ -149,6 +217,7 @@
 		_createClass(SideBar, [{
 			key: 'getTradeRequests',
 			value: function getTradeRequests() {
+				//pull all received and sent trade requests
 				if (received.length == 0 && sent.length == 0) {
 					return _react2.default.createElement(
 						'p',
@@ -156,10 +225,18 @@
 						'No trade requests to display.'
 					);
 				} else {
+					var recArr = received.map(function (trade) {
+						return _react2.default.createElement(RecTrade, { key: trade.fromUser + trade.bookOffered + trade.bookDesired, data: trade });
+					});
+					var sentArr = sent.map(function (trade) {
+						return _react2.default.createElement(SentTrade, { key: trade.toUser + trade.bookOffered + trade.bookDesired, data: trade });
+					});
+	
 					return _react2.default.createElement(
 						'div',
 						null,
-						'Trade requests available.'
+						recArr,
+						sentArr
 					);
 				}
 			}
@@ -226,9 +303,112 @@
 		return SideBar;
 	}(_react2.default.Component);
 	
-	var MainView = function (_React$Component3) {
-		_inherits(MainView, _React$Component3);
+	var RecTrade = function (_React$Component3) {
+		_inherits(RecTrade, _React$Component3);
 	
+		//received trade infobox
+		function RecTrade(props) {
+			_classCallCheck(this, RecTrade);
+	
+			return _possibleConstructorReturn(this, (RecTrade.__proto__ || Object.getPrototypeOf(RecTrade)).call(this, props));
+		}
+	
+		_createClass(RecTrade, [{
+			key: 'render',
+			value: function render() {
+				return _react2.default.createElement(
+					'div',
+					{ className: 'tradeBox' },
+					_react2.default.createElement(
+						'p',
+						null,
+						this.props.data.fromUser,
+						' would like to trade their copy of ',
+						_react2.default.createElement(
+							'span',
+							{ className: 'targetBook' },
+							this.props.data.bookOffered
+						),
+						' for your copy of ',
+						_react2.default.createElement(
+							'span',
+							{ className: 'userBook' },
+							this.props.data.bookDesired
+						),
+						'.'
+					),
+					_react2.default.createElement(
+						'div',
+						{ className: 'btnRow' },
+						_react2.default.createElement(
+							'div',
+							{ className: 'tradeOption acceptOpt' },
+							'Accept'
+						),
+						_react2.default.createElement(
+							'div',
+							{ className: 'tradeOption declineOpt' },
+							'Decline'
+						)
+					)
+				);
+			}
+		}]);
+	
+		return RecTrade;
+	}(_react2.default.Component);
+	
+	var SentTrade = function (_React$Component4) {
+		_inherits(SentTrade, _React$Component4);
+	
+		//sent trade infobox
+		function SentTrade(props) {
+			_classCallCheck(this, SentTrade);
+	
+			return _possibleConstructorReturn(this, (SentTrade.__proto__ || Object.getPrototypeOf(SentTrade)).call(this, props));
+		}
+	
+		_createClass(SentTrade, [{
+			key: 'render',
+			value: function render() {
+				return _react2.default.createElement(
+					'div',
+					{ className: 'tradeBox' },
+					_react2.default.createElement(
+						'p',
+						null,
+						'You have requested to trade your copy of ',
+						_react2.default.createElement(
+							'span',
+							{ className: 'userBook' },
+							this.props.data.bookOffered
+						),
+						' for ',
+						this.props.data.toUser,
+						'\'s copy of ',
+						_react2.default.createElement(
+							'span',
+							{ className: 'targetBook' },
+							this.props.data.bookDesired
+						),
+						'.'
+					),
+					_react2.default.createElement(
+						'div',
+						{ className: 'tradeOption cancelOpt' },
+						'Cancel'
+					)
+				);
+			}
+		}]);
+	
+		return SentTrade;
+	}(_react2.default.Component);
+	
+	var MainView = function (_React$Component5) {
+		_inherits(MainView, _React$Component5);
+	
+		//book view 
 		function MainView(props) {
 			_classCallCheck(this, MainView);
 	
@@ -246,8 +426,8 @@
 					);
 				} else {
 					return this.props.books.map(function (book) {
-						return _react2.default.createElement(BookBox, { book: book, key: book.title + book.owner });
-					});
+						return _react2.default.createElement(BookBox, { book: book, key: book.title + book.owner, tradeFor: this.props.tradeFor });
+					}.bind(this));
 				}
 			}
 		}, {
@@ -286,9 +466,10 @@
 		return MainView;
 	}(_react2.default.Component);
 	
-	var BookBox = function (_React$Component4) {
-		_inherits(BookBox, _React$Component4);
+	var BookBox = function (_React$Component6) {
+		_inherits(BookBox, _React$Component6);
 	
+		//book component
 		function BookBox(props) {
 			_classCallCheck(this, BookBox);
 	
@@ -298,15 +479,114 @@
 		_createClass(BookBox, [{
 			key: 'render',
 			value: function render() {
+				var _this8 = this;
+	
+				if (user == this.props.book.owner) {
+					return _react2.default.createElement(
+						'div',
+						{ className: 'bookBox' },
+						_react2.default.createElement('img', { className: 'ownedBook', src: this.props.book.cover })
+					);
+				}
 				return _react2.default.createElement(
 					'div',
-					null,
-					_react2.default.createElement('img', { src: this.props.book.cover })
+					{ className: 'bookBox' },
+					_react2.default.createElement('img', { src: this.props.book.cover }),
+					_react2.default.createElement(
+						'div',
+						{ className: 'tradeBtn', onClick: function onClick() {
+								return _this8.props.tradeFor(_this8.props.book);
+							} },
+						'+'
+					)
 				);
 			}
 		}]);
 	
 		return BookBox;
+	}(_react2.default.Component);
+	
+	var TradeMenu = function (_React$Component7) {
+		_inherits(TradeMenu, _React$Component7);
+	
+		//trade menu popup component
+		function TradeMenu(props) {
+			_classCallCheck(this, TradeMenu);
+	
+			var _this9 = _possibleConstructorReturn(this, (TradeMenu.__proto__ || Object.getPrototypeOf(TradeMenu)).call(this, props));
+	
+			_this9.getOptions = _this9.getOptions.bind(_this9);
+			return _this9;
+		}
+	
+		_createClass(TradeMenu, [{
+			key: 'getOptions',
+			value: function getOptions() {
+				var count = 0;
+				return this.props.books.map(function (book) {
+					if (book.owner == user) {
+						count++;
+						return _react2.default.createElement(
+							'option',
+							{ key: book.title + count },
+							book.title
+						);
+					}
+				}.bind(this));
+			}
+		}, {
+			key: 'render',
+			value: function render() {
+				return _react2.default.createElement(
+					'div',
+					{ className: 'tradePopup' },
+					_react2.default.createElement(
+						'div',
+						{ id: 'topBar' },
+						_react2.default.createElement(
+							'p',
+							null,
+							'Initiating Trade'
+						)
+					),
+					_react2.default.createElement(
+						'div',
+						{ id: 'leftBar' },
+						_react2.default.createElement('img', { src: this.props.targetBook.cover })
+					),
+					_react2.default.createElement(
+						'div',
+						{ id: 'rightBar' },
+						_react2.default.createElement(
+							'p',
+							null,
+							'Select a book to trade:'
+						),
+						_react2.default.createElement(
+							'select',
+							{ id: 'bookOffered' },
+							this.getOptions()
+						),
+						_react2.default.createElement(
+							'div',
+							{ id: 'btnRow' },
+							_react2.default.createElement(
+								'button',
+								{ className: 'btn btn-primary confirmBtn', onClick: this.props.confirmTrade },
+								'Confirm'
+							),
+							_react2.default.createElement(
+								'button',
+								{ className: 'btn btn-default cancelBtn', onClick: this.props.cancelTrade },
+								'Cancel'
+							)
+						)
+					)
+				);
+			}
+		}]);
+	
+		return TradeMenu;
 	}(_react2.default.Component);
 	
 	_reactDom2.default.render(_react2.default.createElement(App, null), document.querySelector("#app"));

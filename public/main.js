@@ -3,15 +3,23 @@ import ReactDOM from 'react-dom';
 import $ from 'jquery';
 
 $(document).ready(function() {
-	
+	$(document).on('mouseenter', '.tradeBtn', function() {
+		$(this).css('background-color', 'rgba(22,179,22,1)');
+	});
+	$(document).on('mouseleave', '.tradeBtn', function() {
+		$(this).css('background-color', '');
+	});
 	
 });
 
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = { books: [] };
+		this.state = { books: [], targetBook: { title: 'noBookSelected' } };
 		this.addBook = this.addBook.bind(this);
+		this.tradeFor = this.tradeFor.bind(this);
+		this.confirmTrade = this.confirmTrade.bind(this);
+		this.cancelTrade = this.cancelTrade.bind(this);
 	}
 	
 	componentDidMount() {
@@ -22,7 +30,7 @@ class App extends React.Component {
 		}
 	}
 	
-	addBook(event, book) {
+	addBook(event, book) { //add a book via cmd
 		event.preventDefault();
 		$('#bookForm')[0].reset();
 		$.ajax({
@@ -30,7 +38,6 @@ class App extends React.Component {
 			dataType:'json',
 			method:'GET',
 			success:function(data) {
-				console.log(data);
 				if (data.title=='maxReached') {
 					alert('Limit of 10 books has been reached');
 				}
@@ -51,31 +58,100 @@ class App extends React.Component {
 		
 	}
 	
+	tradeFor(book) { //show trade popup
+		var hasBook = false;
+		this.state.books.forEach(function(book) {
+			if (book.owner==user) {
+				hasBook = true;
+			}
+			return;
+			
+		});
+		if (hasBook) {
+			this.setState({ targetBook: book });
+		}
+		else {
+			alert("You do not have any books to trade. Add some books to your collection using the command center toolbar.");
+		}
+	}
+	
+	confirmTrade() { //execute the trade request 
+		$.ajax({
+			url:'/main/trade?offered=' + $('#bookOffered').val(),
+			method:'POST',
+			data:this.state.targetBook,
+			success:function(data) {
+				var result = JSON.parse(data).title;
+				if (result=='duplicateRequest') { 
+					alert('This is a duplicate request. Please select another book and retry.');
+				}
+				else if (result=='success') {
+					window.location = '/main';
+					this.setState({ targetBook: { title: 'noBookSelected' }});
+				}
+				
+			}.bind(this),
+			failure:function(err) {
+				console.log(err);
+			} 
+			
+		});
+		
+	}
+	
+	cancelTrade() {
+		this.setState({ targetBook: { title: 'noBookSelected' }});
+	}
+	
 	render() {
-		return (
-			<div>
-				<SideBar addBook={this.addBook} />
-				<MainView books={this.state.books} />
-			</div>
-		);
+		if (this.state.targetBook.title != 'noBookSelected') {
+			$('#mask').css('display','block');
+			return (
+				<div>
+					<SideBar addBook={this.addBook} />
+					<MainView books={this.state.books} tradeFor={this.tradeFor} />
+					<TradeMenu books={this.state.books} targetBook={this.state.targetBook} confirmTrade={this.confirmTrade} cancelTrade={this.cancelTrade} />
+				</div>
+			);
+		}
+		else {
+			$('#mask').css('display','none');
+			return (
+				<div>
+					<SideBar addBook={this.addBook} />
+					<MainView books={this.state.books} tradeFor={this.tradeFor} />
+				</div>
+			);
+		}
 	}
 	
 }
 
-class SideBar extends React.Component {
+class SideBar extends React.Component { //user toolbar
 	constructor(props) {
 		super(props);
 	}
 	
-	getTradeRequests() {
-		if (received.length==0 && sent.length==0) {
+	getTradeRequests() { //pull all received and sent trade requests
+		if (received.length==0 && sent.length==0) { 
 			return (
 				<p className="infoText">No trade requests to display.</p>
 			);
 		}
 		else {
+			var recArr = received.map(function(trade) {
+				return <RecTrade key={trade.fromUser + trade.bookOffered + trade.bookDesired} data={trade} />;
+			});
+			var sentArr = sent.map(function(trade) {
+				return <SentTrade key={trade.toUser + trade.bookOffered + trade.bookDesired} data={trade} />;
+			});
+			
+			
 			return (
-				<div>Trade requests available.</div>
+				<div>
+					{recArr}
+					{sentArr}
+				</div>
 			);
 		}
 	}
@@ -103,7 +179,44 @@ class SideBar extends React.Component {
 	
 }
 
-class MainView extends React.Component {
+class RecTrade extends React.Component { //received trade infobox
+	constructor(props) {
+		super(props);
+	}
+	
+	render() {
+		return (
+			<div className='tradeBox'>
+				<p>{this.props.data.fromUser} would like to trade their copy of <span className='targetBook'>{this.props.data.bookOffered}</span> for your copy of <span className='userBook'>{this.props.data.bookDesired}</span>.</p>
+				<div className='btnRow'>
+					<div className='tradeOption acceptOpt'>Accept</div>
+					<div className='tradeOption declineOpt'>Decline</div>
+				</div>
+			</div>		
+		);
+		
+	}
+	
+}
+
+class SentTrade extends React.Component { //sent trade infobox
+	constructor(props) {
+		super(props);
+	}
+	
+	render() {
+		return (
+			<div className='tradeBox'>
+				<p>You have requested to trade your copy of <span className='userBook'>{this.props.data.bookOffered}</span> for {this.props.data.toUser}'s copy of <span className='targetBook'>{this.props.data.bookDesired}</span>.</p>
+				<div className='tradeOption cancelOpt'>Cancel</div>
+			</div>		
+		);
+		
+	}
+	
+}
+
+class MainView extends React.Component { //book view 
 	constructor(props) {
 		super(props);
 	}
@@ -115,9 +228,9 @@ class MainView extends React.Component {
 		else {
 			return (
 				this.props.books.map(function(book) {
-					return <BookBox book={book} key={book.title + book.owner}/>
+					return <BookBox book={book} key={book.title + book.owner} tradeFor={this.props.tradeFor}/>
 					
-				})
+				}.bind(this))
 			
 			);
 		}
@@ -139,22 +252,78 @@ class MainView extends React.Component {
 	
 }
 
-class BookBox extends React.Component {
+class BookBox extends React.Component { //book component
 	constructor(props) {
 		super(props);
 	}
 	
 	render() {
-		return (
-			<div>
-				<img src={this.props.book.cover}></img>
+		if (user == this.props.book.owner) {
+			return (
+			<div className='bookBox'>
+				<img className='ownedBook' src={this.props.book.cover}></img>
 			
+			</div>
+		
+		);
+		}
+		return (
+			<div className='bookBox'>
+				<img src={this.props.book.cover}></img>
+				<div className='tradeBtn' onClick={ () => this.props.tradeFor(this.props.book) } >+</div>
 			</div>
 		
 		);
 		
 	}
 	
+}
+
+class TradeMenu extends React.Component { //trade menu popup component
+	constructor(props) {
+		super(props);
+		this.getOptions = this.getOptions.bind(this);
+	}
+	
+	getOptions() {
+		var count = 0;
+		return (
+			this.props.books.map(function(book) {
+				if (book.owner == user) {
+					count++;
+					return <option key={book.title+count}>{book.title}</option>;
+				}
+				
+			}.bind(this))
+			
+		);
+		
+	}
+	
+	render() {
+		return (
+			<div className='tradePopup'>
+				<div id='topBar'>
+					<p>Initiating Trade</p>
+				</div>
+				<div id='leftBar'>
+					<img src={this.props.targetBook.cover} />
+				</div>
+				<div id='rightBar'>
+					<p>Select a book to trade:</p>
+					<select id='bookOffered'>
+						{this.getOptions()}
+					</select>
+					<div id='btnRow'>
+						<button className='btn btn-primary confirmBtn' onClick={this.props.confirmTrade}>Confirm</button>
+						<button className='btn btn-default cancelBtn' onClick={this.props.cancelTrade}>Cancel</button>
+					</div>
+				</div>
+			</div>
+			
+		);
+		
+	}
 	
 }
 

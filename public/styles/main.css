@@ -8,6 +8,15 @@ body {
 	
 }
 
+#mask {
+	position:absolute;
+	height:100%;
+	width:100%;
+	background-color:rgba(255,255,255,.5);
+	z-index:9;
+	display:none;
+}
+
 #sideBar {
 	position:absolute;
 	height:100%;
@@ -19,6 +28,7 @@ body {
 	text-align:center;
 	font-family:Lato;
 	padding:10px;
+	overflow:auto;
 }
 
 #icon {
@@ -95,6 +105,67 @@ input {
 	color:white;
 }
 
+#sideBar .tradeBox {
+	display:block;
+	position:relative;
+	height:95px;
+	width:100%;
+	background-color:#4D4D4D;
+	font-size:.8em;
+	color:white;
+	border-radius:5px;
+	margin-top:5px;
+	padding:5px;
+}
+
+.tradeBox .userBook {
+	font-size:1.1em;
+	color:#57C94B;
+	font-weight:600;
+}
+
+.tradeBox .targetBook {
+	font-size:1.1em;
+	color:gold;
+	font-weight:600;
+}
+
+.tradeBox .btnRow {
+	position:absolute;
+	bottom:0px;
+	width:100px;
+	margin-left:50%;
+	transform:translate(-50%,0);
+}
+
+.tradeBox .tradeOption {
+	display:inline-block;
+	margin-right:10px;
+	font-size:.9em;
+	cursor:pointer;
+}
+
+.tradeBox .acceptOpt {
+	color:green;
+}
+
+.tradeBox .declineOpt {
+	color:#ED7272;
+}
+
+.tradeBox .cancelOpt {
+	position:absolute;
+	width:30px;
+	bottom:0px;
+	color:#ED7272;
+	left:50%;
+	transform:translate(-50%,0);
+}
+
+.tradeBox .tradeOption:hover {
+	text-decoration:underline;
+}
+
 #mainView {
 	position:absolute;
 	right:0;
@@ -121,3 +192,145 @@ input {
 	font-family:arial;
 	color:#C9C9C9;
 }
+
+.bookBox {
+	position:relative;
+	display:inline-block;
+	margin:5px;
+}
+
+.ownedBook {
+	border:2.5px solid green;
+}
+
+.tradeBtn {
+	position:absolute;
+	height:20px;
+	width:35px;
+	top:0;
+	right:0;
+	border-radius:5px;
+	background-color:rgba(22,179,22,.7);
+	text-align:center;
+	color:white;
+	font-size:1.5em;
+	line-height:20px;
+	cursor:pointer;
+}
+
+.tradePopup {
+	position:absolute;
+	height:300px;
+	width:500px;
+	top:50%;
+	left:50%;
+	transform:translate(-50%,-50%);
+	box-shadow:0px 0px 5px 1px black;
+	z-index:99;
+}
+
+.tradePopup #topBar {
+	height:30px;
+	width:100%;
+	background-color:#424242;
+	text-align:center;
+	color:white;
+	font-family:Abel;
+	line-height:25px;
+	font-weight:700;
+}
+
+.tradePopup #leftBar {
+	position:absolute;
+	height:90%;
+	width:30%;
+	border-right:1px solid #DEDEDE;
+	
+}
+
+.tradePopup #leftBar img {
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform:translate(-50%,-50%);
+	box-shadow:0px 0px 3px 1px grey;
+	
+}
+
+.tradePopup #rightBar {
+	position:absolute;
+	height:90%;
+	width:70%;
+	right:0;
+	background-color:rgba(212,212,212,.9);
+}
+
+.tradePopup #rightBar p {
+	text-align:center;
+	color:black;
+	margin-top:35px;
+	font-family:Abel;
+	font-size:1.2em;
+}
+
+.tradePopup #rightBar select {
+	display:block;
+	margin:auto;
+}
+
+.tradePopup #rightBar #btnRow {
+	position:relative;
+	margin-top:100px;
+	width:160px;
+	margin-left:50%;
+	transform:translate(-50%,0);
+}
+
+.tradePopup #rightBar .confirmBtn {
+	position:absolute;
+	display:inline-block;
+	height:35px;
+	width:75px;
+	text-align:center;
+	
+}
+
+.tradePopup #rightBar .cancelBtn {
+	position:absolute;
+	display:inline-block;
+	height:35px;
+	width:75px;
+	right:0;
+	text-align:center;
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
