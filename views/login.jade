@@ -1,0 +1,29 @@
+extends index
+
+block headContent
+	title Book Bazaar - Login
+	link(rel='stylesheet' href='/public/styles/login.css')
+	script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js')
+	script(src='/public/registerScript.js')
+	
+
+block bodyContent
+	div.container
+		div.formContainer
+			h3 Welcome back to the Book Bazaar. 
+			form(action='/login' method='POST')
+				div.form-group
+					label Username
+					input.form-control#userBox(type='text' name='username' autocomplete='off')
+				div.form-group
+					label Password
+					input.form-control#passBox(type='password' name='password')
+				button.btn.btn-primary Login
+				- if (failed) {
+				p.alert Invalid username/password combination. Please try again or register an account.
+				- }
+				hr
+				h3 Not yet a member? Register for a free account below.
+				button.btn.btn-default#registerBtn(type='button') Register
+			
+	

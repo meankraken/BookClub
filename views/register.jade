@@ -1,0 +1,26 @@
+extends index
+
+block headContent
+	title Book Bazaar - Register
+	link(rel='stylesheet' href='/public/styles/login.css')
+	script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js')
+	script(src='/public/registerScript.js')
+	
+block bodyContent
+	div.container
+		div.registerContainer
+			h3 Register now to begin your book collecting journey!
+			form(action='/register' method='POST')
+				div.form-group
+					label Username
+					input.form-control#userBox(type='text' name='username' autocomplete='off')
+				div.form-group
+					label Password
+					input.form-control#passBox(type='password' name='password')
+				button.btn.btn-primary Register
+				- if (taken) {
+				p#taken Username is already taken. Please select another username and try again.
+				- }
+				hr
+				h3 Already a member? Login to your account below.
+				button.btn.btn-default#loginBtn(type='button') Login

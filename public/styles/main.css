@@ -1,0 +1,123 @@
+body {
+	height:100%;
+}
+
+#app {
+	height:100%;
+	width:100%;
+	
+}
+
+#sideBar {
+	position:absolute;
+	height:100%;
+	width:15%;
+	background-color:#3D3638;
+	box-shadow:2px 0px 3px 1px black;
+	float:left;
+	left:0;
+	text-align:center;
+	font-family:Lato;
+	padding:10px;
+}
+
+#icon {
+	position:relative;
+	height:70px;
+	width:70px;
+	border-radius:50%;
+	background:radial-gradient(#E87482, #BD2D3E);
+	left:50%;
+	top:25px;
+	transform:translate(-50%,0);
+	box-shadow:0px 0px 3px 1px #211F20;
+	cursor:pointer;
+	font-family:arial;
+	margin-bottom:50px;
+}
+
+#topIcon {
+	position:absolute;
+	font-size:3em;
+	left:23%;
+	color:white;
+}
+
+#bottomIcon {
+	position:absolute;
+	font-size:3em;
+	top:15%;
+	left:37%;
+	color:gold;
+}
+
+.smallText {
+	position:relative;
+	color:white;
+	font-size:.8em;
+	
+}
+
+.cmdText {
+	position:relative;
+	color:white;
+	font-size:.8em;
+	text-decoration:underline;
+	
+}
+
+.hintText {
+	position:relative;
+	font-size:.8em;
+	color:#BFBFBF;
+}
+
+hr {
+	position:relative;
+	top:0px;
+	width:85%;
+	border-color:#616161;
+	margin-top:0;
+}
+
+form {
+	margin-bottom:35px;
+}
+
+input {
+	border:0;
+	background-color:#5C5C5C;
+	box-shadow:inset 0px 0px 3px 1px #363636;
+	color:white;
+}
+
+.infoText {
+	color:white;
+}
+
+#mainView {
+	position:absolute;
+	right:0;
+	height:100%;
+	width:85%;
+	padding:20px;
+	font-family:Lato;
+	color:#595255;
+}
+
+#mainView hr {
+	width:100%;
+	margin-top:35px;
+}
+
+#mainView h5 {
+	font-size:.9em;
+	
+}
+
+#noBooks {
+	text-align:center;
+	margin-top:50px;
+	font-family:arial;
+	color:#C9C9C9;
+}

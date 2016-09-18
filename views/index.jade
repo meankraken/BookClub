@@ -1,0 +1,40 @@
+doctype html
+
+head
+	link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous")
+	block headContent
+		title Welcome to Book Bazaar
+		link(rel="stylesheet" href="./public/styles/index.css")
+		link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Aladin")
+		link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Arvo")
+	
+
+body
+	block bodyContent
+		div.container-fluid  
+			div.intro
+				h2 Welcome to the
+				h1(style='color:white') Book&nbsp
+				h1 Bazaar
+				div#topLeftCorner
+				div#topRightCorner
+				div#bottomRightCorner
+				div#bottomLeftCorner
+				div#borderBox
+			div.row#banner
+				div.col-md-4#col1
+					div.textBox#box1
+						p#p1 Here at the Book Bazaar, you can browse the wares of other users. In this case, the wares are exclusively books!
+				div.col-md-4#col2
+					div.textBox#box2
+						p#p2 Become a Bazaar member and 
+						a(href='/register') register
+						span &nbspnow!
+						hr
+						p Already a member? 
+						a(href='/login') Login 
+				div.col-md-4#col3
+					div.textBox#box3
+						p#p3 Trade with other users to expand your collection. Sharing is learning.
+			
+			

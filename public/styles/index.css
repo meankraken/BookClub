@@ -1,0 +1,172 @@
+body {
+	background:linear-gradient(#4EB2D4,#79C8F2);
+	height:1200px;
+}
+
+.intro {
+	position:absolute;
+	height:500px;
+	width:800px;
+	left:50%;
+	transform:translate(-50%,20%);
+	background:radial-gradient(#E87482, #BD2D3E);
+	box-shadow:0px 2px 5px 1px black;
+}
+
+.intro h2 {
+	position:relative;
+	font-family:Aladin;
+	font-size:7em;
+	color:black;
+	top:125px;
+	left:80px;
+	
+}
+
+.intro h1 {
+	display:inline-block;
+	position:relative;
+	font-family:Aladin;
+	font-size:9em;
+	color:gold;
+	top:60px;
+	left:150px;
+	text-shadow:3px 3px grey;
+	
+}
+
+#topLeftCorner {
+	position:absolute;
+	left:-15px;
+	top:-15px;
+	height:0;
+	width:0;
+	border-top:70px solid #FFF782;
+	border-right:70px solid transparent;
+	border-bottom:70px solid transparent;
+	
+}
+
+#topRightCorner {
+	position:absolute;
+	top:-15px;
+	right:-15px;
+	height:0;
+	width:0;
+	border-top:70px solid #FFF782;
+	border-left:70px solid transparent;
+	border-bottom:70px solid transparent;
+}
+
+#bottomRightCorner {
+	position:absolute;
+	bottom:-15px;
+	right:-15px;
+	height:0;
+	width:0;
+	border-top:70px solid transparent;
+	border-left:70px solid transparent;
+	border-bottom:70px solid #FFF782;
+}
+
+#bottomLeftCorner {
+	position:absolute;
+	bottom:-15px;
+	left:-15px;
+	height:0;
+	width:0;
+	border-top:70px solid transparent;
+	border-right:70px solid transparent;
+	border-bottom:70px solid #FFF782;
+}
+
+#borderBox {
+	position:absolute;
+	height:400px;
+	width:700px;
+	top:50px;
+	left:50px;
+	border-top:1px solid gold;
+	border-bottom:1px solid gold;
+	border-radius:10%;
+}
+
+#banner {
+	position:relative;
+	top:700px;
+}
+
+.col-md-4 {
+	height:350px;
+}
+
+#col1, #col2 {
+	border-right:1px solid #9ED5E8;
+}
+
+.textBox {
+	position:relative;
+	height:250px;
+	width:400px;
+	background:radial-gradient(#89DAF5,#49BCE3);
+	border-radius:10px;
+	top:50%;
+	left:50%;
+	transform:translate(-50%,-50%);
+	padding:20px;
+	text-align:center;
+	color:white;
+	font-family:Arvo;
+	font-size:1.7em;
+	
+}
+
+#box1 {
+	box-shadow:-2px 2px 5px 1px #696969;
+}
+
+#box2 {
+	box-shadow:0px 2px 5px 1px #696969;
+}
+
+#box3 {
+	box-shadow:2px 2px 5px 1px #696969;
+}
+
+#p1 {
+	margin-top:30px;
+}
+
+#p2 {
+	margin-top:10px;
+}
+
+#p3 {
+	margin-top:50px;
+}
+
+a:hover, a:visited {
+	text-decoration:none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

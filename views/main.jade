@@ -1,0 +1,17 @@
+extends index
+
+block headContent
+	title Book Bazaar - Main 
+	link(rel='stylesheet' href='/public/styles/main.css')
+	link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato")
+	link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela")
+	script.
+		var user = !{JSON.stringify(user)}
+		var received = !{JSON.stringify(received)}
+		var sent = !{JSON.stringify(sent)}
+		var books = !{JSON.stringify(books)} 
+		
+block bodyContent
+	div.container-fluid#app
+	script(src='./build/bundle.js')
+		
