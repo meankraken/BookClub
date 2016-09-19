@@ -88,22 +88,39 @@
 	
 			var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 	
-			_this.state = { books: [], targetBook: { title: 'noBookSelected' } };
+			_this.state = { books: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' } };
 			_this.addBook = _this.addBook.bind(_this);
 			_this.tradeFor = _this.tradeFor.bind(_this);
 			_this.confirmTrade = _this.confirmTrade.bind(_this);
 			_this.cancelTrade = _this.cancelTrade.bind(_this);
+			_this.cancelTradeRequest = _this.cancelTradeRequest.bind(_this);
+			_this.acceptTrade = _this.acceptTrade.bind(_this);
+			_this.declineTrade = _this.declineTrade.bind(_this);
 			return _this;
 		}
 	
 		_createClass(App, [{
 			key: 'componentDidMount',
 			value: function componentDidMount() {
+				var bookArr = [];
+				var sentArr = [];
+				var recArr = [];
 				if (books) {
 					if (books.length > 0) {
-						this.setState({ books: books });
+						bookArr = books.slice();
 					}
 				}
+				if (sent) {
+					if (sent.length > 0) {
+						sentArr = sent.slice();
+					}
+				}
+				if (received) {
+					if (received.length > 0) {
+						recArr = received.slice();
+					}
+				}
+				this.setState({ books: bookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
 			}
 		}, {
 			key: 'addBook',
@@ -161,6 +178,8 @@
 						var result = JSON.parse(data).title;
 						if (result == 'duplicateRequest') {
 							alert('This is a duplicate request. Please select another book and retry.');
+						} else if (result == 'limitReached') {
+							alert('You have already initiated 5 trade requests. Please cancel any old requests to continue trading.');
 						} else if (result == 'success') {
 							window.location = '/main';
 							this.setState({ targetBook: { title: 'noBookSelected' } });
@@ -175,7 +194,94 @@
 		}, {
 			key: 'cancelTrade',
 			value: function cancelTrade() {
+				//close trade menu, cancel request initiation
 				this.setState({ targetBook: { title: 'noBookSelected' } });
+			}
+		}, {
+			key: 'cancelTradeRequest',
+			value: function cancelTradeRequest(TR) {
+				//cancel an existing trade request 
+				_jquery2.default.ajax({
+					url: '/main/cancelTrade',
+					method: 'POST',
+					data: TR,
+					success: function (data) {
+						var result = JSON.parse(data);
+						if (result.title == 'success') {
+							var index = -1;
+							var arr = this.state.sentRequests.slice();
+	
+							for (var i = 0; i < arr.length; i++) {
+								if (arr[i].toUser == TR.toUser && arr[i].bookOffered == TR.bookOffered && arr[i].bookDesired == TR.bookDesired) {
+									index = i;
+								}
+							}
+	
+							if (index > -1) {
+								arr.splice(index, 1);
+								this.setState({ sentRequests: arr.slice() });
+							}
+						}
+					}.bind(this),
+					failure: function failure(err) {
+						console.log(err);
+					}
+	
+				});
+			}
+		}, {
+			key: 'acceptTrade',
+			value: function acceptTrade(TR) {
+				//accept a received trade request
+				_jquery2.default.ajax({
+					url: '/main/acceptTrade',
+					method: 'POST',
+					data: TR,
+					success: function success(data) {
+						var result = JSON.parse(data).title;
+						if (result == 'success') {
+							window.location = '/main';
+						} else if (result == 'failure') {
+							alert("Book is no longer owned by this user. Cancelling trade.");
+						}
+					},
+					failure: function failure(err) {
+						console.log(err);
+					}
+	
+				});
+			}
+		}, {
+			key: 'declineTrade',
+			value: function declineTrade(TR) {
+				//decline a received trade request
+				_jquery2.default.ajax({
+					url: '/main/declineTrade',
+					method: 'POST',
+					data: TR,
+					success: function (data) {
+						var result = JSON.parse(data);
+						if (result.title == 'success') {
+							var index = -1;
+							var arr = this.state.receivedRequests.slice();
+	
+							for (var i = 0; i < arr.length; i++) {
+								if (arr[i].fromUser == TR.fromUser && arr[i].bookOffered == TR.bookOffered && arr[i].bookDesired == TR.bookDesired) {
+									index = i;
+								}
+							}
+	
+							if (index > -1) {
+								arr.splice(index, 1);
+								this.setState({ receivedRequests: arr.slice() });
+							}
+						}
+					}.bind(this),
+					failure: function failure(err) {
+						console.log(err);
+					}
+	
+				});
 			}
 		}, {
 			key: 'render',
@@ -185,7 +291,7 @@
 					return _react2.default.createElement(
 						'div',
 						null,
-						_react2.default.createElement(SideBar, { addBook: this.addBook }),
+						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
 						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor }),
 						_react2.default.createElement(TradeMenu, { books: this.state.books, targetBook: this.state.targetBook, confirmTrade: this.confirmTrade, cancelTrade: this.cancelTrade })
 					);
@@ -194,7 +300,7 @@
 					return _react2.default.createElement(
 						'div',
 						null,
-						_react2.default.createElement(SideBar, { addBook: this.addBook }),
+						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
 						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor })
 					);
 				}
@@ -218,19 +324,19 @@
 			key: 'getTradeRequests',
 			value: function getTradeRequests() {
 				//pull all received and sent trade requests
-				if (received.length == 0 && sent.length == 0) {
+				if (this.props.receivedRequests.length == 0 && this.props.sentRequests.length == 0) {
 					return _react2.default.createElement(
 						'p',
 						{ className: 'infoText' },
 						'No trade requests to display.'
 					);
 				} else {
-					var recArr = received.map(function (trade) {
-						return _react2.default.createElement(RecTrade, { key: trade.fromUser + trade.bookOffered + trade.bookDesired, data: trade });
-					});
-					var sentArr = sent.map(function (trade) {
-						return _react2.default.createElement(SentTrade, { key: trade.toUser + trade.bookOffered + trade.bookDesired, data: trade });
-					});
+					var recArr = this.props.receivedRequests.map(function (trade) {
+						return _react2.default.createElement(RecTrade, { key: trade.fromUser + trade.bookOffered + trade.bookDesired, data: trade, acceptTrade: this.props.acceptTrade, declineTrade: this.props.declineTrade });
+					}.bind(this));
+					var sentArr = this.props.sentRequests.map(function (trade) {
+						return _react2.default.createElement(SentTrade, { key: trade.toUser + trade.bookOffered + trade.bookDesired, data: trade, cancelTradeRequest: this.props.cancelTradeRequest });
+					}.bind(this));
 	
 					return _react2.default.createElement(
 						'div',
@@ -316,6 +422,8 @@
 		_createClass(RecTrade, [{
 			key: 'render',
 			value: function render() {
+				var _this5 = this;
+	
 				return _react2.default.createElement(
 					'div',
 					{ className: 'tradeBox' },
@@ -342,12 +450,16 @@
 						{ className: 'btnRow' },
 						_react2.default.createElement(
 							'div',
-							{ className: 'tradeOption acceptOpt' },
+							{ className: 'tradeOption acceptOpt', onClick: function onClick() {
+									return _this5.props.acceptTrade(_this5.props.data);
+								} },
 							'Accept'
 						),
 						_react2.default.createElement(
 							'div',
-							{ className: 'tradeOption declineOpt' },
+							{ className: 'tradeOption declineOpt', onClick: function onClick() {
+									return _this5.props.declineTrade(_this5.props.data);
+								} },
 							'Decline'
 						)
 					)
@@ -371,6 +483,8 @@
 		_createClass(SentTrade, [{
 			key: 'render',
 			value: function render() {
+				var _this7 = this;
+	
 				return _react2.default.createElement(
 					'div',
 					{ className: 'tradeBox' },
@@ -395,7 +509,9 @@
 					),
 					_react2.default.createElement(
 						'div',
-						{ className: 'tradeOption cancelOpt' },
+						{ className: 'tradeOption cancelOpt', onClick: function onClick() {
+								return _this7.props.cancelTradeRequest(_this7.props.data);
+							} },
 						'Cancel'
 					)
 				);
@@ -457,6 +573,11 @@
 						null,
 						'You may initiate trades with other users by clicking the trade icon on any book you desire. It\'s up to them if they will accept!'
 					),
+					_react2.default.createElement(
+						'p',
+						{ style: { 'fontSize': '.75em' } },
+						'Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.'
+					),
 					_react2.default.createElement('hr', null),
 					this.getBooks()
 				);
@@ -479,7 +600,7 @@
 		_createClass(BookBox, [{
 			key: 'render',
 			value: function render() {
-				var _this8 = this;
+				var _this10 = this;
 	
 				if (user == this.props.book.owner) {
 					return _react2.default.createElement(
@@ -495,7 +616,7 @@
 					_react2.default.createElement(
 						'div',
 						{ className: 'tradeBtn', onClick: function onClick() {
-								return _this8.props.tradeFor(_this8.props.book);
+								return _this10.props.tradeFor(_this10.props.book);
 							} },
 						'+'
 					)
@@ -513,10 +634,10 @@
 		function TradeMenu(props) {
 			_classCallCheck(this, TradeMenu);
 	
-			var _this9 = _possibleConstructorReturn(this, (TradeMenu.__proto__ || Object.getPrototypeOf(TradeMenu)).call(this, props));
+			var _this11 = _possibleConstructorReturn(this, (TradeMenu.__proto__ || Object.getPrototypeOf(TradeMenu)).call(this, props));
 	
-			_this9.getOptions = _this9.getOptions.bind(_this9);
-			return _this9;
+			_this11.getOptions = _this11.getOptions.bind(_this11);
+			return _this11;
 		}
 	
 		_createClass(TradeMenu, [{

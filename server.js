@@ -169,6 +169,7 @@ app.post('/main/trade', function(req,res) { //initiate trade with another user
 	var targetBook = req.body.title; //trading for
 	var bookOffered = req.query.offered; //book offered 
 	var duplicate = false;
+	var limitReached = false;
 	
 	req.user.sentRequests.forEach(function(item) {
 		if (item.toUser==targetOwner && item.bookOffered==bookOffered && item.bookDesired==targetBook) { //if this is a duplicate trade request
@@ -177,8 +178,16 @@ app.post('/main/trade', function(req,res) { //initiate trade with another user
 		
 	});
 	
+	if (req.user.sentRequests.length>=5) {
+		limitReached = true;
+	}
+	
 	if (duplicate) {
 		var obj = { title: 'duplicateRequest' };
+		res.end(JSON.stringify(obj));
+	}
+	else if (limitReached) {
+		var obj = { title: 'limitReached' };
 		res.end(JSON.stringify(obj));
 	}
 	else {
@@ -218,6 +227,228 @@ app.post('/main/trade', function(req,res) { //initiate trade with another user
 	
 	
 });
+
+app.post('/main/cancelTrade', function(req,res) { //cancel a trade request
+	Account.findOne({username:req.user.username}, function(err,user) {
+		if (err) {
+			console.log(err);
+		}
+		else {
+			var index = -1;
+			for (var i=0; i<user.sentRequests.length; i++) {
+				if (user.sentRequests[i].toUser==req.body.toUser && user.sentRequests[i].bookOffered==req.body.bookOffered && user.sentRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) {
+				var arr = user.sentRequests.slice();
+				arr.splice(index,1); //remove the request from the user's sentRequests 
+				user.sentRequests = arr.slice();
+				user.save();
+			}
+		}
+	});
+	
+	Account.findOne({username:req.body.toUser}, function(err,user) {
+		if (err) {
+			console.log(err);
+		}
+		else {
+			var index = -1;
+			for (var i=0; i<user.receivedRequests.length; i++) {
+				if (user.receivedRequests[i].fromUser==req.user.username && user.receivedRequests[i].bookOffered==req.body.bookOffered && user.receivedRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) {
+				var arr = user.receivedRequests.slice();
+				arr.splice(index,1); //remove the request the target user received 
+				user.receivedRequests = arr.slice();
+				user.save();
+			}
+		}
+	});
+	
+	var obj = { title: 'success' };
+	res.end(JSON.stringify(obj));
+	
+});
+
+app.post('/main/acceptTrade', function(req,res) {
+	Account.find({username: {$in: [req.user.username, req.body.fromUser]}}).exec(function(err,users) { //pull both users involved in trade
+		var currentUserIndex = -1; //index of current user
+		var otherUserIndex = -1; //index of other user that sent the request
+		for (var i=0; i<users.length; i++) {
+			if (users[i].username==req.user.username) {
+				currentUserIndex = i;
+			}
+			if (users[i].username==req.body.fromUser) {
+				otherUserIndex = i;
+			}
+		}
+		var currentUser = users[currentUserIndex];
+		var otherUser = users[otherUserIndex];
+		
+		var index = -1;
+			for (var i=0; i<otherUser.sentRequests.length; i++) {
+				if (otherUser.sentRequests[i].toUser==req.user.username && otherUser.sentRequests[i].bookOffered==req.body.bookOffered && otherUser.sentRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) { //delete the request from the other user's list
+				var arr = otherUser.sentRequests.slice();
+				arr.splice(index,1); 
+				otherUser.sentRequests = arr.slice();
+				otherUser.save(); 
+			}
+			
+			index = -1;
+			for (var i=0; i<currentUser.receivedRequests.length; i++) {
+				if (currentUser.receivedRequests[i].fromUser==req.body.fromUser && currentUser.receivedRequests[i].bookOffered==req.body.bookOffered && currentUser.receivedRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) { //delete the request from current user's list
+				var arr = currentUser.receivedRequests.slice();
+				arr.splice(index,1); 
+				currentUser.receivedRequests = arr.slice();
+				currentUser.save();
+			}
+		var userOwns = false; //does user still own book
+		var otherUserOwns = false; //does other user still own book
+		
+		var bookOfferedObj; //vars used to hold the book objects
+		var bookDesiredObj;
+		
+		currentUser.bookList.forEach(function(book) {
+			if (book.title == req.body.bookDesired) {
+				bookDesiredObj = book; 
+				userOwns = true;
+			}
+			
+		});
+		
+		otherUser.bookList.forEach(function(book) {
+			if (book.title == req.body.bookOffered) {
+				bookOfferedObj = book;
+				otherUserOwns = true;
+			}
+			
+		});
+		
+		var desiredBookIndex = -1;
+		var offeredBookIndex = -1;
+		
+		if (userOwns && otherUserOwns) { //trade succeeded 
+			for (var i=0; i<currentUser.bookList.length; i++) {
+				if (currentUser.bookList[i].title == bookDesiredObj.title) {
+					desiredBookIndex = i;
+				}
+			}
+			for (var j=0; j<otherUser.bookList.length; j++) {
+				if (otherUser.bookList[j].title == bookOfferedObj.title) {
+					offeredBookIndex = j;
+				}
+			}
+			
+			bookOfferedObj.owner = currentUser.username; //change book owners inside bookLists
+			bookDesiredObj.owner = otherUser.username;
+			
+			currentUser.bookList.splice(desiredBookIndex,1); //swap the books in the user bookLists 
+			currentUser.bookList.push(bookOfferedObj);
+			currentUser.save();
+			
+			otherUser.bookList.splice(offeredBookIndex,1);
+			otherUser.bookList.push(bookDesiredObj);
+			otherUser.save();
+			
+			Book.find({title:{$in: [bookOfferedObj.title, bookDesiredObj.title]} }).exec(function(err, books) { //swap the books in the books collection
+				if (err) {
+					console.log(err);
+				}
+				else {
+					var bookOfferedFound = false;
+					var bookDesiredFound = false;
+					books.forEach(function(book) {
+						if (book.title==bookOfferedObj.title && book.owner==req.body.fromUser && !bookOfferedFound) {
+							book.owner = currentUser.username; 
+							book.save();
+							bookOfferedFound = true;
+						}
+						if (book.title==bookDesiredObj.title && book.owner==req.user.username && !bookDesiredFound) {
+							book.owner = otherUser.username; 
+							book.save();
+							bookDesiredFound = true;
+						}
+					});
+					
+					var obj = { title: 'success' };
+					res.end(JSON.stringify(obj));
+					
+				}
+				
+			});
+		
+			
+		}
+		else {
+			var obj = { title: 'failure' };
+			res.end(JSON.stringify(obj));
+		}
+		
+	});
+	
+	
+	
+});
+
+app.post('/main/declineTrade', function(req,res) {
+	Account.findOne({username: req.body.fromUser}, function(err,user) { //find and delete the request the other user sent
+		if (err) {
+			console.log(err);
+		}
+		else {
+			var index = -1;
+			for (var i=0; i<user.sentRequests.length; i++) {
+				if (user.sentRequests[i].toUser==req.user.username && user.sentRequests[i].bookOffered==req.body.bookOffered && user.sentRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) {
+				var arr = user.sentRequests.slice();
+				arr.splice(index,1); 
+				user.sentRequests = arr.slice();
+				user.save();
+			}
+		}
+	});
+	
+	Account.findOne({username:req.user.username}, function(err,user) { //find and delete the received request from current user's list 
+		if (err) {
+			console.log(err);
+		}
+		else {
+			var index = -1;
+			for (var i=0; i<user.receivedRequests.length; i++) {
+				if (user.receivedRequests[i].fromUser==req.body.fromUser && user.receivedRequests[i].bookOffered==req.body.bookOffered && user.receivedRequests[i].bookDesired==req.body.bookDesired) {
+					index = i;
+				}
+			}
+			if (index > -1) {
+				var arr = user.receivedRequests.slice();
+				arr.splice(index,1); 
+				user.receivedRequests = arr.slice();
+				user.save();
+			}
+		}
+	});
+	
+	var obj = { title: 'success' };
+	res.end(JSON.stringify(obj));
+	
+});
+
+
 
 
 app.listen(port, function() {

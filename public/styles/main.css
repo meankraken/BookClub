@@ -108,7 +108,7 @@ input {
 #sideBar .tradeBox {
 	display:block;
 	position:relative;
-	height:95px;
+	height:100px;
 	width:100%;
 	background-color:#4D4D4D;
 	font-size:.8em;
@@ -119,13 +119,13 @@ input {
 }
 
 .tradeBox .userBook {
-	font-size:1.1em;
+	font-size:1em;
 	color:#57C94B;
 	font-weight:600;
 }
 
 .tradeBox .targetBook {
-	font-size:1.1em;
+	font-size:1em;
 	color:gold;
 	font-weight:600;
 }
@@ -136,6 +136,7 @@ input {
 	width:100px;
 	margin-left:50%;
 	transform:translate(-50%,0);
+	
 }
 
 .tradeBox .tradeOption {
@@ -178,7 +179,7 @@ input {
 
 #mainView hr {
 	width:100%;
-	margin-top:35px;
+	margin-top:0;
 }
 
 #mainView h5 {
