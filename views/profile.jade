@@ -1,0 +1,32 @@
+extends index
+
+block headContent
+	title Your Profile 
+	link(rel='stylesheet' href='/public/styles/profile.css') 
+	link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cabin+Sketch")
+	link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato")
+	link(rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Play")
+	script.
+		var userInfo = !{JSON.stringify(userInfo)}
+
+block bodyContent
+	div.container 
+		div.usernameBox 
+			h3 User Profile - &nbsp
+			h3=user
+		div.profileBox
+		script(src='/build/profile.bundle.js')
+			
+
+
+
+
+
+
+
+
+
+
+
+
+

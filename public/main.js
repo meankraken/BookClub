@@ -343,10 +343,14 @@ class MainView extends React.Component { //book view
 	render() {
 		return (
 			<div id='mainView'>
-				<h2>VIEW ALL BOOKS</h2>
+				<div id='largeText'> 
+					<h1>BookBazaar</h1>
+					<h3 className='centerText'>VIEW ALL BOOKS</h3>
+					<a className='profileLink' href='/profile'><h2>{user.toUpperCase()}</h2></a>
+				</div>
 				<h5>View all books collected by Bazaar users below. If a book is marked with a <span style={{color:'green'}}>green</span> border, this indicates that you own a copy of it.</h5>
 				<h5>You may initiate trades with other users by clicking the trade icon on any book you desire. It's up to them if they will accept!</h5>
-				<p style={{'fontSize':'.75em'}}>Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.</p>
+				<h5 style={{'fontSize':'.75em'}}>Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.</h5>
 				<hr/>
 				{this.getBooks()}
 			

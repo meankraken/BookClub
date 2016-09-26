@@ -55,6 +55,12 @@ app.get('/login', function(req,res) {
 
 app.post('/login', passport.authenticate('local', {successRedirect: '/main', failureRedirect: '/login?failed=true' }));
 
+app.get('/logout', function(req,res) {
+	req.logout();
+	res.redirect('/');
+	
+});
+
 app.get('/register', function(req,res) {
 	res.render('register');
 	
@@ -289,6 +295,16 @@ app.post('/main/acceptTrade', function(req,res) {
 		var currentUser = users[currentUserIndex];
 		var otherUser = users[otherUserIndex];
 		
+		//first, update both users activity logs with the completed trade info
+		var tradeObj = { tradeType: 'youAccepted', bookOffered: req.body.bookOffered, bookDesired: req.body.bookDesired, fromUser: otherUser.username, toUser: req.user.username };
+		currentUser.trades.push(tradeObj);
+		
+		tradeObj = { tradeType: 'theyAccepted', bookOffered: req.body.bookOffered, bookDesired: req.body.bookDesired, fromUser: req.user.username, toUser: otherUser.username };
+		otherUser.trades.push(tradeObj);
+		
+		
+		
+		//now remove the requests 
 		var index = -1;
 			for (var i=0; i<otherUser.sentRequests.length; i++) {
 				if (otherUser.sentRequests[i].toUser==req.user.username && otherUser.sentRequests[i].bookOffered==req.body.bookOffered && otherUser.sentRequests[i].bookDesired==req.body.bookDesired) {
@@ -408,6 +424,20 @@ app.post('/main/declineTrade', function(req,res) {
 			console.log(err);
 		}
 		else {
+			//need to update the target user's trade log 
+			var tradeObj = { tradeType: 'theyDeclined', bookOffered: req.body.bookOffered, bookDesired: req.body.bookDesired, fromUser: user.username, toUser: req.user.username };
+			if (user.trades) {
+				user.trades.push(tradeObj);
+				user.save();
+			}
+			else {
+				var tradeArr = user.trades.slice();
+				tradeArr.push(tradeObj);
+				user.trades = tradeArr.slice();
+				user.save();
+			}
+	
+			//now delete the trade request 
 			var index = -1;
 			for (var i=0; i<user.sentRequests.length; i++) {
 				if (user.sentRequests[i].toUser==req.user.username && user.sentRequests[i].bookOffered==req.body.bookOffered && user.sentRequests[i].bookDesired==req.body.bookDesired) {
@@ -420,6 +450,8 @@ app.post('/main/declineTrade', function(req,res) {
 				user.sentRequests = arr.slice();
 				user.save();
 			}
+			
+			
 		}
 	});
 	
@@ -448,6 +480,41 @@ app.post('/main/declineTrade', function(req,res) {
 	
 });
 
+app.get('/profile', function(req,res) {
+	if (req.user) {
+		res.render('profile', {user: req.user.username, userInfo: req.user});
+	}
+	else {
+		res.redirect('/');
+	}
+	
+});
+
+app.post('/profile', function(req,res) {
+	if (req.user) {
+		Account.findOne({ username: req.user.username}, function(err,user) {
+			if (err) {
+				console.log(err);
+			}
+			else {
+				user.firstName = req.body.firstName; 
+				user.lastName = req.body.lastName;
+				user.city = req.body.city;
+				user.state = req.body.state;
+				
+				user.save();
+				
+				res.redirect('/profile');
+			}
+		});
+		
+	
+	}
+	else {
+		res.redirect('/');
+	}
+	
+});
 
 
 

@@ -42,9 +42,9 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/*!************************!*\
-  !*** ./public/main.js ***!
-  \************************/
+/*!***************************!*\
+  !*** ./public/profile.js ***!
+  \***************************/
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -72,11 +72,11 @@
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	(0, _jquery2.default)(document).ready(function () {
-		(0, _jquery2.default)(document).on('mouseenter', '.tradeBtn', function () {
-			(0, _jquery2.default)(this).css('background-color', 'rgba(22,179,22,1)');
+		(0, _jquery2.default)(document).on('mouseenter', '.editBtn', function () {
+			(0, _jquery2.default)(this).css('text-decoration', 'underline');
 		});
-		(0, _jquery2.default)(document).on('mouseleave', '.tradeBtn', function () {
-			(0, _jquery2.default)(this).css('background-color', '');
+		(0, _jquery2.default)(document).on('mouseleave', '.editBtn', function () {
+			(0, _jquery2.default)(this).css('text-decoration', '');
 		});
 	});
 	
@@ -88,647 +88,341 @@
 	
 			var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 	
-			_this.state = { books: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' } };
-			_this.addBook = _this.addBook.bind(_this);
-			_this.tradeFor = _this.tradeFor.bind(_this);
-			_this.confirmTrade = _this.confirmTrade.bind(_this);
-			_this.cancelTrade = _this.cancelTrade.bind(_this);
-			_this.cancelTradeRequest = _this.cancelTradeRequest.bind(_this);
-			_this.acceptTrade = _this.acceptTrade.bind(_this);
-			_this.declineTrade = _this.declineTrade.bind(_this);
+			_this.state = { userInfo: {}, viewMode: 'view' };
+			_this.changeMode = _this.changeMode.bind(_this);
 			return _this;
 		}
 	
 		_createClass(App, [{
 			key: 'componentDidMount',
 			value: function componentDidMount() {
-				var bookArr = [];
-				var sentArr = [];
-				var recArr = [];
-				if (books) {
-					if (books.length > 0) {
-						bookArr = books.slice();
-					}
-				}
-				if (sent) {
-					if (sent.length > 0) {
-						sentArr = sent.slice();
-					}
-				}
-				if (received) {
-					if (received.length > 0) {
-						recArr = received.slice();
-					}
-				}
-				this.setState({ books: bookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
+				var obj = { firstName: userInfo.firstName, lastName: userInfo.lastName, city: userInfo.city, state: userInfo.state, trades: userInfo.trades };
+				this.setState({ userInfo: obj });
 			}
 		}, {
-			key: 'addBook',
-			value: function addBook(event, book) {
-				//add a book via cmd
-				event.preventDefault();
-				(0, _jquery2.default)('#bookForm')[0].reset();
-				_jquery2.default.ajax({
-					url: '/main/addBook?book=' + book,
-					dataType: 'json',
-					method: 'GET',
-					success: function (data) {
-						if (data.title == 'maxReached') {
-							alert('Limit of 10 books has been reached');
-						} else if (data.title == 'alreadyAdded') {
-							alert('You have already added this book to your collection.');
-						} else {
-							var arr = this.state.books.slice();
-							arr.push(data);
-							this.setState({ books: arr.slice() });
-						}
-					}.bind(this),
-					failure: function failure(err) {
-						console.log(err);
-					}
-	
-				});
-			}
-		}, {
-			key: 'tradeFor',
-			value: function tradeFor(book) {
-				//show trade popup
-				var hasBook = false;
-				this.state.books.forEach(function (book) {
-					if (book.owner == user) {
-						hasBook = true;
-					}
-					return;
-				});
-				if (hasBook) {
-					this.setState({ targetBook: book });
+			key: 'changeMode',
+			value: function changeMode() {
+				if (this.state.viewMode == 'view') {
+					this.setState({ viewMode: 'edit' });
 				} else {
-					alert("You do not have any books to trade. Add some books to your collection using the command center toolbar.");
+					this.setState({ viewMode: 'view' });
 				}
-			}
-		}, {
-			key: 'confirmTrade',
-			value: function confirmTrade() {
-				//execute the trade request 
-				_jquery2.default.ajax({
-					url: '/main/trade?offered=' + (0, _jquery2.default)('#bookOffered').val(),
-					method: 'POST',
-					data: this.state.targetBook,
-					success: function (data) {
-						var result = JSON.parse(data).title;
-						if (result == 'duplicateRequest') {
-							alert('This is a duplicate request. Please select another book and retry.');
-						} else if (result == 'limitReached') {
-							alert('You have already initiated 5 trade requests. Please cancel any old requests to continue trading.');
-						} else if (result == 'success') {
-							window.location = '/main';
-							this.setState({ targetBook: { title: 'noBookSelected' } });
-						}
-					}.bind(this),
-					failure: function failure(err) {
-						console.log(err);
-					}
-	
-				});
-			}
-		}, {
-			key: 'cancelTrade',
-			value: function cancelTrade() {
-				//close trade menu, cancel request initiation
-				this.setState({ targetBook: { title: 'noBookSelected' } });
-			}
-		}, {
-			key: 'cancelTradeRequest',
-			value: function cancelTradeRequest(TR) {
-				//cancel an existing trade request 
-				_jquery2.default.ajax({
-					url: '/main/cancelTrade',
-					method: 'POST',
-					data: TR,
-					success: function (data) {
-						var result = JSON.parse(data);
-						if (result.title == 'success') {
-							var index = -1;
-							var arr = this.state.sentRequests.slice();
-	
-							for (var i = 0; i < arr.length; i++) {
-								if (arr[i].toUser == TR.toUser && arr[i].bookOffered == TR.bookOffered && arr[i].bookDesired == TR.bookDesired) {
-									index = i;
-								}
-							}
-	
-							if (index > -1) {
-								arr.splice(index, 1);
-								this.setState({ sentRequests: arr.slice() });
-							}
-						}
-					}.bind(this),
-					failure: function failure(err) {
-						console.log(err);
-					}
-	
-				});
-			}
-		}, {
-			key: 'acceptTrade',
-			value: function acceptTrade(TR) {
-				//accept a received trade request
-				_jquery2.default.ajax({
-					url: '/main/acceptTrade',
-					method: 'POST',
-					data: TR,
-					success: function success(data) {
-						var result = JSON.parse(data).title;
-						if (result == 'success') {
-							window.location = '/main';
-						} else if (result == 'failure') {
-							alert("Book is no longer owned by this user. Cancelling trade.");
-						}
-					},
-					failure: function failure(err) {
-						console.log(err);
-					}
-	
-				});
-			}
-		}, {
-			key: 'declineTrade',
-			value: function declineTrade(TR) {
-				//decline a received trade request
-				_jquery2.default.ajax({
-					url: '/main/declineTrade',
-					method: 'POST',
-					data: TR,
-					success: function (data) {
-						var result = JSON.parse(data);
-						if (result.title == 'success') {
-							var index = -1;
-							var arr = this.state.receivedRequests.slice();
-	
-							for (var i = 0; i < arr.length; i++) {
-								if (arr[i].fromUser == TR.fromUser && arr[i].bookOffered == TR.bookOffered && arr[i].bookDesired == TR.bookDesired) {
-									index = i;
-								}
-							}
-	
-							if (index > -1) {
-								arr.splice(index, 1);
-								this.setState({ receivedRequests: arr.slice() });
-							}
-						}
-					}.bind(this),
-					failure: function failure(err) {
-						console.log(err);
-					}
-	
-				});
 			}
 		}, {
 			key: 'render',
 			value: function render() {
-				if (this.state.targetBook.title != 'noBookSelected') {
-					(0, _jquery2.default)('#mask').css('display', 'block');
-					return _react2.default.createElement(
-						'div',
-						null,
-						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
-						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor }),
-						_react2.default.createElement(TradeMenu, { books: this.state.books, targetBook: this.state.targetBook, confirmTrade: this.confirmTrade, cancelTrade: this.cancelTrade })
-					);
-				} else {
-					(0, _jquery2.default)('#mask').css('display', 'none');
-					return _react2.default.createElement(
-						'div',
-						null,
-						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
-						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor })
-					);
-				}
+				return _react2.default.createElement(
+					'div',
+					null,
+					_react2.default.createElement(AccountInfo, { userInfo: this.state.userInfo, viewMode: this.state.viewMode, changeMode: this.changeMode })
+				);
 			}
 		}]);
 	
 		return App;
 	}(_react2.default.Component);
 	
-	var SideBar = function (_React$Component2) {
-		_inherits(SideBar, _React$Component2);
+	var AccountInfo = function (_React$Component2) {
+		_inherits(AccountInfo, _React$Component2);
 	
-		//user toolbar
-		function SideBar(props) {
-			_classCallCheck(this, SideBar);
+		function AccountInfo(props) {
+			_classCallCheck(this, AccountInfo);
 	
-			return _possibleConstructorReturn(this, (SideBar.__proto__ || Object.getPrototypeOf(SideBar)).call(this, props));
+			return _possibleConstructorReturn(this, (AccountInfo.__proto__ || Object.getPrototypeOf(AccountInfo)).call(this, props));
 		}
 	
-		_createClass(SideBar, [{
-			key: 'getTradeRequests',
-			value: function getTradeRequests() {
-				//pull all received and sent trade requests
-				if (this.props.receivedRequests.length == 0 && this.props.sentRequests.length == 0) {
-					return _react2.default.createElement(
-						'p',
-						{ className: 'infoText' },
-						'No trade requests to display.'
-					);
-				} else {
-					var recArr = this.props.receivedRequests.map(function (trade) {
-						return _react2.default.createElement(RecTrade, { key: trade.fromUser + trade.bookOffered + trade.bookDesired, data: trade, acceptTrade: this.props.acceptTrade, declineTrade: this.props.declineTrade });
-					}.bind(this));
-					var sentArr = this.props.sentRequests.map(function (trade) {
-						return _react2.default.createElement(SentTrade, { key: trade.toUser + trade.bookOffered + trade.bookDesired, data: trade, cancelTradeRequest: this.props.cancelTradeRequest });
-					}.bind(this));
-	
+		_createClass(AccountInfo, [{
+			key: 'render',
+			value: function render() {
+				if (this.props.viewMode == 'view') {
 					return _react2.default.createElement(
 						'div',
 						null,
-						recArr,
-						sentArr
+						_react2.default.createElement(
+							'div',
+							{ id: 'topBar' },
+							_react2.default.createElement(
+								'h3',
+								null,
+								'Account Details'
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'editBtn', onClick: this.props.changeMode },
+								'edit'
+							)
+						),
+						_react2.default.createElement(
+							'div',
+							{ id: 'infoBody' },
+							_react2.default.createElement(
+								'h4',
+								null,
+								'First Name:'
+							),
+							' ',
+							_react2.default.createElement(
+								'div',
+								{ className: 'valueField' },
+								this.props.userInfo.firstName
+							),
+							_react2.default.createElement('hr', null),
+							_react2.default.createElement(
+								'h4',
+								null,
+								'Last Name:'
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'valueField' },
+								' ',
+								this.props.userInfo.lastName
+							),
+							_react2.default.createElement('hr', null),
+							_react2.default.createElement(
+								'h4',
+								null,
+								'City: '
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'valueField' },
+								this.props.userInfo.city
+							),
+							_react2.default.createElement('hr', null),
+							_react2.default.createElement(
+								'h4',
+								null,
+								'State: '
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'valueField' },
+								this.props.userInfo.state
+							),
+							_react2.default.createElement('hr', null),
+							_react2.default.createElement(ActivityLog, { trades: this.props.userInfo.trades }),
+							_react2.default.createElement(
+								'a',
+								{ id: 'returnLink', href: '/main' },
+								'Return to the Bazaar'
+							),
+							_react2.default.createElement(
+								'a',
+								{ id: 'logoutLink', href: '/logout' },
+								'Logout'
+							)
+						)
+					);
+				} else {
+					return _react2.default.createElement(
+						'div',
+						null,
+						_react2.default.createElement(
+							'div',
+							{ id: 'topBar' },
+							_react2.default.createElement(
+								'h3',
+								null,
+								'Account Details'
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'editBtn', onClick: this.props.changeMode },
+								'cancel'
+							)
+						),
+						_react2.default.createElement(
+							'form',
+							{ id: 'infoForm', method: 'POST', action: '/profile' },
+							_react2.default.createElement(
+								'div',
+								{ className: 'form-group' },
+								_react2.default.createElement(
+									'label',
+									null,
+									'First Name: '
+								),
+								_react2.default.createElement('input', { type: 'text', name: 'firstName', defaultValue: this.props.userInfo.firstName, className: 'form-control' })
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'form-group' },
+								_react2.default.createElement(
+									'label',
+									null,
+									'Last Name: '
+								),
+								_react2.default.createElement('input', { type: 'text', name: 'lastName', defaultValue: this.props.userInfo.lastName, className: 'form-control' })
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'form-group' },
+								_react2.default.createElement(
+									'label',
+									null,
+									'City: '
+								),
+								_react2.default.createElement('input', { type: 'text', name: 'city', defaultValue: this.props.userInfo.city, className: 'form-control' })
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'form-group' },
+								_react2.default.createElement(
+									'label',
+									null,
+									'State: '
+								),
+								_react2.default.createElement('input', { type: 'text', name: 'state', defaultValue: this.props.userInfo.state, className: 'form-control' })
+							),
+							_react2.default.createElement(
+								'button',
+								{ type: 'submit', className: 'btn btn-primary' },
+								'Done'
+							)
+						)
+					);
+				}
+			}
+		}]);
+	
+		return AccountInfo;
+	}(_react2.default.Component);
+	
+	var ActivityLog = function (_React$Component3) {
+		_inherits(ActivityLog, _React$Component3);
+	
+		function ActivityLog(props) {
+			_classCallCheck(this, ActivityLog);
+	
+			return _possibleConstructorReturn(this, (ActivityLog.__proto__ || Object.getPrototypeOf(ActivityLog)).call(this, props));
+		}
+	
+		_createClass(ActivityLog, [{
+			key: 'getTrades',
+			value: function getTrades() {
+				if (this.props.trades) {
+					if (this.props.trades.length > 0) {
+						var count = 0;
+						return this.props.trades.map(function (trade) {
+							count++;
+							return _react2.default.createElement(Trade, { trade: trade, key: count });
+						});
+					} else {
+						return _react2.default.createElement(
+							'p',
+							null,
+							'This log will track your trade history. You currently have no completed trades to show.'
+						);
+					}
+				} else {
+					return _react2.default.createElement(
+						'p',
+						null,
+						'This log will track your trade history. You currently have no completed trades to show.'
 					);
 				}
 			}
 		}, {
 			key: 'render',
 			value: function render() {
-				var _this3 = this;
-	
 				return _react2.default.createElement(
 					'div',
-					{ id: 'sideBar' },
+					{ id: 'activityLog' },
+					_react2.default.createElement(
+						'h5',
+						null,
+						'ACTIVITY LOG'
+					),
 					_react2.default.createElement(
 						'div',
-						{ id: 'icon' },
-						_react2.default.createElement(
-							'span',
-							{ id: 'topIcon' },
-							'B'
-						),
-						_react2.default.createElement(
-							'p',
-							{ id: 'bottomIcon' },
-							'B'
-						)
-					),
-					_react2.default.createElement(
-						'p',
-						{ className: 'smallText' },
-						'BAZAAR COMMAND CENTER'
-					),
-					_react2.default.createElement('hr', null),
-					_react2.default.createElement(
-						'p',
-						{ className: 'cmdText' },
-						'Add Book'
-					),
-					_react2.default.createElement(
-						'p',
-						{ className: 'hintText' },
-						'[This command will search and add a book of your choosing to your collection. You may add up to 10 books.]'
-					),
-					_react2.default.createElement(
-						'form',
-						{ id: 'bookForm', onSubmit: function onSubmit(event) {
-								return _this3.props.addBook(event, (0, _jquery2.default)('#bookInput').val());
-							} },
-						_react2.default.createElement('input', { id: 'bookInput', type: 'text' })
-					),
-					_react2.default.createElement(
-						'p',
-						{ className: 'cmdText' },
-						'Your Trade Requests'
-					),
-					_react2.default.createElement(
-						'p',
-						{ className: 'hintText' },
-						'[This section will display the trade requests you\'ve received as well as the ones you\'ve sent.]'
-					),
-					this.getTradeRequests()
+						{ className: 'activityBox' },
+						this.getTrades()
+					)
 				);
 			}
 		}]);
 	
-		return SideBar;
+		return ActivityLog;
 	}(_react2.default.Component);
 	
-	var RecTrade = function (_React$Component3) {
-		_inherits(RecTrade, _React$Component3);
+	var Trade = function (_React$Component4) {
+		_inherits(Trade, _React$Component4);
 	
-		//received trade infobox
-		function RecTrade(props) {
-			_classCallCheck(this, RecTrade);
+		function Trade(props) {
+			_classCallCheck(this, Trade);
 	
-			return _possibleConstructorReturn(this, (RecTrade.__proto__ || Object.getPrototypeOf(RecTrade)).call(this, props));
+			return _possibleConstructorReturn(this, (Trade.__proto__ || Object.getPrototypeOf(Trade)).call(this, props));
 		}
 	
-		_createClass(RecTrade, [{
+		_createClass(Trade, [{
 			key: 'render',
 			value: function render() {
-				var _this5 = this;
-	
-				return _react2.default.createElement(
-					'div',
-					{ className: 'tradeBox' },
-					_react2.default.createElement(
+				var obj = this.props.trade;
+				if (obj.tradeType == 'theyAccepted') {
+					return _react2.default.createElement(
 						'p',
 						null,
-						this.props.data.fromUser,
-						' would like to trade their copy of ',
+						obj.toUser,
+						' has accepted your offer. You have traded your copy of ',
 						_react2.default.createElement(
 							'span',
-							{ className: 'targetBook' },
-							this.props.data.bookOffered
+							{ style: { color: "#37A667" } },
+							obj.bookOffered
+						),
+						' for ',
+						_react2.default.createElement(
+							'span',
+							{ style: { color: "gold" } },
+							obj.bookDesired
+						),
+						'.'
+					);
+				} else if (obj.tradeType == 'youAccepted') {
+					return _react2.default.createElement(
+						'p',
+						null,
+						'You have accepted ',
+						obj.fromUser,
+						'\'s offer to trade their copy of ',
+						_react2.default.createElement(
+							'span',
+							{ style: { color: "gold" } },
+							obj.bookOffered
 						),
 						' for your copy of ',
 						_react2.default.createElement(
 							'span',
-							{ className: 'userBook' },
-							this.props.data.bookDesired
+							{ style: { color: "#37A667" } },
+							obj.bookDesired
 						),
 						'.'
-					),
-					_react2.default.createElement(
-						'div',
-						{ className: 'btnRow' },
-						_react2.default.createElement(
-							'div',
-							{ className: 'tradeOption acceptOpt', onClick: function onClick() {
-									return _this5.props.acceptTrade(_this5.props.data);
-								} },
-							'Accept'
-						),
-						_react2.default.createElement(
-							'div',
-							{ className: 'tradeOption declineOpt', onClick: function onClick() {
-									return _this5.props.declineTrade(_this5.props.data);
-								} },
-							'Decline'
-						)
-					)
-				);
-			}
-		}]);
-	
-		return RecTrade;
-	}(_react2.default.Component);
-	
-	var SentTrade = function (_React$Component4) {
-		_inherits(SentTrade, _React$Component4);
-	
-		//sent trade infobox
-		function SentTrade(props) {
-			_classCallCheck(this, SentTrade);
-	
-			return _possibleConstructorReturn(this, (SentTrade.__proto__ || Object.getPrototypeOf(SentTrade)).call(this, props));
-		}
-	
-		_createClass(SentTrade, [{
-			key: 'render',
-			value: function render() {
-				var _this7 = this;
-	
-				return _react2.default.createElement(
-					'div',
-					{ className: 'tradeBox' },
-					_react2.default.createElement(
-						'p',
-						null,
-						'You have requested to trade your copy of ',
-						_react2.default.createElement(
-							'span',
-							{ className: 'userBook' },
-							this.props.data.bookOffered
-						),
-						' for ',
-						this.props.data.toUser,
-						'\'s copy of ',
-						_react2.default.createElement(
-							'span',
-							{ className: 'targetBook' },
-							this.props.data.bookDesired
-						),
-						'.'
-					),
-					_react2.default.createElement(
-						'div',
-						{ className: 'tradeOption cancelOpt', onClick: function onClick() {
-								return _this7.props.cancelTradeRequest(_this7.props.data);
-							} },
-						'Cancel'
-					)
-				);
-			}
-		}]);
-	
-		return SentTrade;
-	}(_react2.default.Component);
-	
-	var MainView = function (_React$Component5) {
-		_inherits(MainView, _React$Component5);
-	
-		//book view 
-		function MainView(props) {
-			_classCallCheck(this, MainView);
-	
-			return _possibleConstructorReturn(this, (MainView.__proto__ || Object.getPrototypeOf(MainView)).call(this, props));
-		}
-	
-		_createClass(MainView, [{
-			key: 'getBooks',
-			value: function getBooks() {
-				if (this.props.books.length == 0) {
-					return _react2.default.createElement(
-						'h1',
-						{ id: 'noBooks' },
-						'There are no books in the Bazaar. Be the first to add one!'
 					);
 				} else {
-					return this.props.books.map(function (book) {
-						return _react2.default.createElement(BookBox, { book: book, key: book.title + book.owner, tradeFor: this.props.tradeFor });
-					}.bind(this));
-				}
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				return _react2.default.createElement(
-					'div',
-					{ id: 'mainView' },
-					_react2.default.createElement(
-						'div',
-						{ id: 'largeText' },
-						_react2.default.createElement(
-							'h1',
-							null,
-							'BookBazaar'
-						),
-						_react2.default.createElement(
-							'h3',
-							{ className: 'centerText' },
-							'VIEW ALL BOOKS'
-						),
-						_react2.default.createElement(
-							'a',
-							{ className: 'profileLink', href: '/profile' },
-							_react2.default.createElement(
-								'h2',
-								null,
-								user.toUpperCase()
-							)
-						)
-					),
-					_react2.default.createElement(
-						'h5',
+					return _react2.default.createElement(
+						'p',
 						null,
-						'View all books collected by Bazaar users below. If a book is marked with a ',
+						obj.toUser,
+						' has ',
 						_react2.default.createElement(
 							'span',
-							{ style: { color: 'green' } },
-							'green'
+							{ style: { color: '#F27979' } },
+							'declined'
 						),
-						' border, this indicates that you own a copy of it.'
-					),
-					_react2.default.createElement(
-						'h5',
-						null,
-						'You may initiate trades with other users by clicking the trade icon on any book you desire. It\'s up to them if they will accept!'
-					),
-					_react2.default.createElement(
-						'h5',
-						{ style: { 'fontSize': '.75em' } },
-						'Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.'
-					),
-					_react2.default.createElement('hr', null),
-					this.getBooks()
-				);
-			}
-		}]);
-	
-		return MainView;
-	}(_react2.default.Component);
-	
-	var BookBox = function (_React$Component6) {
-		_inherits(BookBox, _React$Component6);
-	
-		//book component
-		function BookBox(props) {
-			_classCallCheck(this, BookBox);
-	
-			return _possibleConstructorReturn(this, (BookBox.__proto__ || Object.getPrototypeOf(BookBox)).call(this, props));
-		}
-	
-		_createClass(BookBox, [{
-			key: 'render',
-			value: function render() {
-				var _this10 = this;
-	
-				if (user == this.props.book.owner) {
-					return _react2.default.createElement(
-						'div',
-						{ className: 'bookBox' },
-						_react2.default.createElement('img', { className: 'ownedBook', src: this.props.book.cover })
+						' your offer to trade your copy of ',
+						obj.bookOffered,
+						' for their copy of ',
+						obj.bookDesired,
+						'.'
 					);
 				}
-				return _react2.default.createElement(
-					'div',
-					{ className: 'bookBox' },
-					_react2.default.createElement('img', { src: this.props.book.cover }),
-					_react2.default.createElement(
-						'div',
-						{ className: 'tradeBtn', onClick: function onClick() {
-								return _this10.props.tradeFor(_this10.props.book);
-							} },
-						'+'
-					)
-				);
 			}
 		}]);
 	
-		return BookBox;
+		return Trade;
 	}(_react2.default.Component);
 	
-	var TradeMenu = function (_React$Component7) {
-		_inherits(TradeMenu, _React$Component7);
-	
-		//trade menu popup component
-		function TradeMenu(props) {
-			_classCallCheck(this, TradeMenu);
-	
-			var _this11 = _possibleConstructorReturn(this, (TradeMenu.__proto__ || Object.getPrototypeOf(TradeMenu)).call(this, props));
-	
-			_this11.getOptions = _this11.getOptions.bind(_this11);
-			return _this11;
-		}
-	
-		_createClass(TradeMenu, [{
-			key: 'getOptions',
-			value: function getOptions() {
-				var count = 0;
-				return this.props.books.map(function (book) {
-					if (book.owner == user) {
-						count++;
-						return _react2.default.createElement(
-							'option',
-							{ key: book.title + count },
-							book.title
-						);
-					}
-				}.bind(this));
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				return _react2.default.createElement(
-					'div',
-					{ className: 'tradePopup' },
-					_react2.default.createElement(
-						'div',
-						{ id: 'topBar' },
-						_react2.default.createElement(
-							'p',
-							null,
-							'Initiating Trade'
-						)
-					),
-					_react2.default.createElement(
-						'div',
-						{ id: 'leftBar' },
-						_react2.default.createElement('img', { src: this.props.targetBook.cover })
-					),
-					_react2.default.createElement(
-						'div',
-						{ id: 'rightBar' },
-						_react2.default.createElement(
-							'p',
-							null,
-							'Select a book to trade:'
-						),
-						_react2.default.createElement(
-							'select',
-							{ id: 'bookOffered' },
-							this.getOptions()
-						),
-						_react2.default.createElement(
-							'div',
-							{ id: 'btnRow' },
-							_react2.default.createElement(
-								'button',
-								{ className: 'btn btn-primary confirmBtn', onClick: this.props.confirmTrade },
-								'Confirm'
-							),
-							_react2.default.createElement(
-								'button',
-								{ className: 'btn btn-default cancelBtn', onClick: this.props.cancelTrade },
-								'Cancel'
-							)
-						)
-					)
-				);
-			}
-		}]);
-	
-		return TradeMenu;
-	}(_react2.default.Component);
-	
-	_reactDom2.default.render(_react2.default.createElement(App, null), document.querySelector("#app"));
+	_reactDom2.default.render(_react2.default.createElement(App, null), document.querySelector('.profileBox'));
 
 /***/ },
 /* 1 */
@@ -32699,4 +32393,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=bundle.js.map
+//# sourceMappingURL=profile.bundle.js.map

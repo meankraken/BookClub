@@ -177,6 +177,34 @@ input {
 	color:#595255;
 }
 
+#mainView #largeText {
+	position:relative;
+	width:100%;
+	margin-bottom:-14px;
+}
+
+#mainView #largeText h1 {
+	position:relative;
+	display:inline-block;
+	
+}
+
+#mainView .centerText {
+	position:absolute;
+	display:inline-block;
+	left:50%;
+	transform:translate(-50%,0);
+	text-align:center;
+	bottom:0;
+	color:#525252;
+}
+
+#mainView #largeText .profileLink {
+	display:inline;
+	position:relative;
+	float:right;
+}
+
 #mainView hr {
 	width:100%;
 	margin-top:0;
@@ -184,7 +212,8 @@ input {
 
 #mainView h5 {
 	font-size:.9em;
-	
+	text-align:center;
+	color:#525252;
 }
 
 #noBooks {

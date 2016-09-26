@@ -4,10 +4,13 @@ var APP_DIR = path.join(__dirname, "/public/");
 var BUILD_DIR = path.join(__dirname, "/build");
 
 module.exports = {
-	entry: APP_DIR + "main.js",
+	entry: {
+		main: APP_DIR + "main.js",
+		profile: APP_DIR + "profile.js"
+	},
 	output: {
 		path: BUILD_DIR,
-		filename: 'bundle.js'
+		filename: '[name].bundle.js'
 	},
 	
 	module: {
