@@ -16,7 +16,8 @@
     "Express",
     "Mongo",
     "React",
-    "Jade"
+    "Jade",
+	"Webpack"
   ],
   "author": "Jeff Feng",
   "license": "ISC",
