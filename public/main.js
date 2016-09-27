@@ -15,7 +15,7 @@ $(document).ready(function() {
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = { books: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' } };
+		this.state = { books: [], userBooks: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' }, bookView: 'all' };
 		this.addBook = this.addBook.bind(this);
 		this.tradeFor = this.tradeFor.bind(this);
 		this.confirmTrade = this.confirmTrade.bind(this);
@@ -23,10 +23,13 @@ class App extends React.Component {
 		this.cancelTradeRequest = this.cancelTradeRequest.bind(this);
 		this.acceptTrade = this.acceptTrade.bind(this);
 		this.declineTrade = this.declineTrade.bind(this);
+		this.setAllView = this.setAllView.bind(this);
+		this.setYourView = this.setYourView.bind(this);
 	}
 	
 	componentDidMount() {
 		var bookArr = [];
+		var userBookArr = [];
 		var sentArr = [];
 		var recArr = [];
 		if (books) {
@@ -44,7 +47,12 @@ class App extends React.Component {
 				recArr = received.slice();
 			}
 		}
-		this.setState({ books: bookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
+		if (userBooks) {
+			if (userBooks.length>0) {
+				userBookArr = userBooks.slice();
+			}
+		}
+		this.setState({ books: bookArr.slice(), userBooks: userBookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
 	}
 	
 	addBook(event, book) { //add a book via cmd
@@ -63,8 +71,9 @@ class App extends React.Component {
 				}
 				else {
 					var arr = this.state.books.slice();
-					arr.push(data);
-					this.setState({ books: arr.slice() });
+					var arr2 = this.state.userBooks.slice();
+					arr.push(data); arr2.push(data);
+					this.setState({ books: arr.slice(), userBooks: arr2.slice() });
 				}
 			}.bind(this),
 			failure:function(err) {
@@ -206,13 +215,35 @@ class App extends React.Component {
 		
 	}
 	
+	setAllView() { //set view to all books
+		if (this.state.bookView=='yours') {
+			this.setState({ bookView:'all' });
+			
+		}
+	}
+	
+	setYourView() { //set view to only user's books
+		if (this.state.bookView=='all') {
+			this.setState({ bookView:'yours' });
+		}
+	}
+	
+	getBookView() { //return books array based on which view is set
+		if (this.state.bookView=='all') {
+			return this.state.books;
+		}
+		else {
+			return this.state.userBooks;
+		}
+	}
+	
 	render() {
 		if (this.state.targetBook.title != 'noBookSelected') {
 			$('#mask').css('display','block');
 			return (
 				<div>
 					<SideBar addBook={this.addBook} sentRequests={this.state.sentRequests} receivedRequests={this.state.receivedRequests} cancelTradeRequest={this.cancelTradeRequest} acceptTrade={this.acceptTrade} declineTrade={this.declineTrade} />
-					<MainView books={this.state.books} tradeFor={this.tradeFor} />
+					<MainView books={this.getBookView()} tradeFor={this.tradeFor} bookView={this.state.bookView} setAllView={this.setAllView} setYourView={this.setYourView} />
 					<TradeMenu books={this.state.books} targetBook={this.state.targetBook} confirmTrade={this.confirmTrade} cancelTrade={this.cancelTrade} />
 				</div>
 			);
@@ -222,7 +253,7 @@ class App extends React.Component {
 			return (
 				<div>
 					<SideBar addBook={this.addBook} sentRequests={this.state.sentRequests} receivedRequests={this.state.receivedRequests} cancelTradeRequest={this.cancelTradeRequest} acceptTrade={this.acceptTrade} declineTrade={this.declineTrade} />
-					<MainView books={this.state.books} tradeFor={this.tradeFor} />
+					<MainView books={this.getBookView()} tradeFor={this.tradeFor} bookView={this.state.bookView} setAllView={this.setAllView} setYourView={this.setYourView} />
 				</div>
 			);
 		}
@@ -340,6 +371,24 @@ class MainView extends React.Component { //book view
 		}
 	}
 	
+	getAllClass() {
+		if (this.props.bookView=='all') {
+			return "chosenView";
+		}
+		else {
+			return "notSelected";
+		}
+	}
+	
+	getYourClass() {
+		if (this.props.bookView=='yours') {
+			return "selectedView";
+		}
+		else {
+			return "notSelected";
+		}
+	}
+	
 	render() {
 		return (
 			<div id='mainView'>
@@ -353,7 +402,9 @@ class MainView extends React.Component { //book view
 				<h5 style={{'fontSize':'.75em'}}>Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.</h5>
 				<hr/>
 				{this.getBooks()}
-			
+				<div id='viewToggle'>
+					<div id='allView' className={this.getAllClass()} onClick={this.props.setAllView} >ALL</div>|<div id='yourView' className={this.getYourClass()} onClick={this.props.setYourView} >YOURS</div>
+				</div>
 			</div>
 		
 		);

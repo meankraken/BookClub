@@ -88,7 +88,7 @@
 	
 			var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 	
-			_this.state = { books: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' } };
+			_this.state = { books: [], userBooks: [], sentRequests: [], receivedRequests: [], targetBook: { title: 'noBookSelected' }, bookView: 'all' };
 			_this.addBook = _this.addBook.bind(_this);
 			_this.tradeFor = _this.tradeFor.bind(_this);
 			_this.confirmTrade = _this.confirmTrade.bind(_this);
@@ -96,6 +96,8 @@
 			_this.cancelTradeRequest = _this.cancelTradeRequest.bind(_this);
 			_this.acceptTrade = _this.acceptTrade.bind(_this);
 			_this.declineTrade = _this.declineTrade.bind(_this);
+			_this.setAllView = _this.setAllView.bind(_this);
+			_this.setYourView = _this.setYourView.bind(_this);
 			return _this;
 		}
 	
@@ -103,6 +105,7 @@
 			key: 'componentDidMount',
 			value: function componentDidMount() {
 				var bookArr = [];
+				var userBookArr = [];
 				var sentArr = [];
 				var recArr = [];
 				if (books) {
@@ -120,7 +123,12 @@
 						recArr = received.slice();
 					}
 				}
-				this.setState({ books: bookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
+				if (userBooks) {
+					if (userBooks.length > 0) {
+						userBookArr = userBooks.slice();
+					}
+				}
+				this.setState({ books: bookArr.slice(), userBooks: userBookArr.slice(), sentRequests: sentArr.slice(), receivedRequests: recArr.slice() });
 			}
 		}, {
 			key: 'addBook',
@@ -139,8 +147,9 @@
 							alert('You have already added this book to your collection.');
 						} else {
 							var arr = this.state.books.slice();
-							arr.push(data);
-							this.setState({ books: arr.slice() });
+							var arr2 = this.state.userBooks.slice();
+							arr.push(data);arr2.push(data);
+							this.setState({ books: arr.slice(), userBooks: arr2.slice() });
 						}
 					}.bind(this),
 					failure: function failure(err) {
@@ -284,6 +293,32 @@
 				});
 			}
 		}, {
+			key: 'setAllView',
+			value: function setAllView() {
+				//set view to all books
+				if (this.state.bookView == 'yours') {
+					this.setState({ bookView: 'all' });
+				}
+			}
+		}, {
+			key: 'setYourView',
+			value: function setYourView() {
+				//set view to only user's books
+				if (this.state.bookView == 'all') {
+					this.setState({ bookView: 'yours' });
+				}
+			}
+		}, {
+			key: 'getBookView',
+			value: function getBookView() {
+				//return books array based on which view is set
+				if (this.state.bookView == 'all') {
+					return this.state.books;
+				} else {
+					return this.state.userBooks;
+				}
+			}
+		}, {
 			key: 'render',
 			value: function render() {
 				if (this.state.targetBook.title != 'noBookSelected') {
@@ -292,7 +327,7 @@
 						'div',
 						null,
 						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
-						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor }),
+						_react2.default.createElement(MainView, { books: this.getBookView(), tradeFor: this.tradeFor, bookView: this.state.bookView, setAllView: this.setAllView, setYourView: this.setYourView }),
 						_react2.default.createElement(TradeMenu, { books: this.state.books, targetBook: this.state.targetBook, confirmTrade: this.confirmTrade, cancelTrade: this.cancelTrade })
 					);
 				} else {
@@ -301,7 +336,7 @@
 						'div',
 						null,
 						_react2.default.createElement(SideBar, { addBook: this.addBook, sentRequests: this.state.sentRequests, receivedRequests: this.state.receivedRequests, cancelTradeRequest: this.cancelTradeRequest, acceptTrade: this.acceptTrade, declineTrade: this.declineTrade }),
-						_react2.default.createElement(MainView, { books: this.state.books, tradeFor: this.tradeFor })
+						_react2.default.createElement(MainView, { books: this.getBookView(), tradeFor: this.tradeFor, bookView: this.state.bookView, setAllView: this.setAllView, setYourView: this.setYourView })
 					);
 				}
 			}
@@ -547,6 +582,24 @@
 				}
 			}
 		}, {
+			key: 'getAllClass',
+			value: function getAllClass() {
+				if (this.props.bookView == 'all') {
+					return "chosenView";
+				} else {
+					return "notSelected";
+				}
+			}
+		}, {
+			key: 'getYourClass',
+			value: function getYourClass() {
+				if (this.props.bookView == 'yours') {
+					return "selectedView";
+				} else {
+					return "notSelected";
+				}
+			}
+		}, {
 			key: 'render',
 			value: function render() {
 				return _react2.default.createElement(
@@ -597,7 +650,22 @@
 						'Note: You may have up to a total of 5 active trade requests initiated. After the limit is reached, other users can still initiate trades with you.'
 					),
 					_react2.default.createElement('hr', null),
-					this.getBooks()
+					this.getBooks(),
+					_react2.default.createElement(
+						'div',
+						{ id: 'viewToggle' },
+						_react2.default.createElement(
+							'div',
+							{ id: 'allView', className: this.getAllClass(), onClick: this.props.setAllView },
+							'ALL'
+						),
+						'|',
+						_react2.default.createElement(
+							'div',
+							{ id: 'yourView', className: this.getYourClass(), onClick: this.props.setYourView },
+							'YOURS'
+						)
+					)
 				);
 			}
 		}]);

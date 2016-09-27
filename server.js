@@ -99,7 +99,7 @@ app.get('/main', function(req,res) { //main authenticated view
 						console.log(err);
 					}
 					else {
-						res.render('main', {user: req.user.username, received: user.receivedRequests, sent: user.sentRequests, books: docs });
+						res.render('main', {user: req.user.username, received: user.receivedRequests, sent: user.sentRequests, books: docs, userBooks: user.bookList });
 					}
 				});
 				

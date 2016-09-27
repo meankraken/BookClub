@@ -335,9 +335,40 @@ input {
 	
 }
 
+#viewToggle {
+	position:absolute;
+	bottom:5px;
+	width:75px;
+	left:50%;
+	font-size:.85em;
+	text-align:center;
+	
+}
 
+#viewToggle #allView {
+	display:inline-block;
+	float:left;
+	
+}
 
+#viewToggle #yourView {
+	display:inline-block;
+	float:right;
+	
+}
 
+.selectedView {
+	color:;
+}
+
+.notSelected {
+	color:#499EBA;
+}
+
+.notSelected:hover {
+	text-decoration:underline;
+	cursor:pointer;
+}
 
 
 
